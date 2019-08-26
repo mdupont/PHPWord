@@ -81,6 +81,7 @@ class SectionTest extends \PHPUnit\Framework\TestCase
         $section->addTitle(utf8_decode('ä'), 1);
         $section->addTextRun();
         $section->addFootnote();
+        $section->addEndnote();
         $section->addCheckBox(utf8_decode('chkä'), utf8_decode('Contentä'));
         $section->addTOC();
 
@@ -97,6 +98,7 @@ class SectionTest extends \PHPUnit\Framework\TestCase
             'Title',
             'TextRun',
             'Footnote',
+            'Endnote',
             'CheckBox',
             'TOC',
         );
@@ -214,5 +216,43 @@ class SectionTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(1, $section->countElements());
         $this->assertEquals($secondText->getElementId(), $section->getElement(1)->getElementId());
+    }
+
+    public function testGetSetFootnoteProperties()
+    {
+        $object = new Section(1);
+
+        $fp = new \PhpOffice\PhpWord\ComplexType\FootnoteProperties();
+        //sets the position of the footnote (pageBottom (default), beneathText, sectEnd, docEnd)
+        $fp->setPos(\PhpOffice\PhpWord\ComplexType\FootnoteProperties::POSITION_BENEATH_TEXT);
+        //set the number format to use (decimal (default), upperRoman, upperLetter, ...)
+        $fp->setNumFmt(\PhpOffice\PhpWord\SimpleType\NumberFormat::LOWER_ROMAN);
+        //force starting at other than 1
+        $fp->setNumStart(2);
+        //when to restart counting (continuous (default), eachSect, eachPage)
+        $fp->setNumRestart(\PhpOffice\PhpWord\ComplexType\FootnoteProperties::RESTART_NUMBER_EACH_PAGE);
+        //And finaly, set it on the Section
+        $object->setFootnoteProperties($fp);
+
+        $this->assertInstanceOf("PhpOffice\\PhpWord\\ComplexType\\FootnoteProperties", $object->getFootnoteProperties());
+    }
+
+    public function testGetSetEndnoteProperties()
+    {
+        $object = new Section(1);
+
+        $fp = new \PhpOffice\PhpWord\ComplexType\FootnoteProperties();
+        //sets the position of the footnote (pageBottom (default), beneathText, sectEnd, docEnd)
+        $fp->setPos(\PhpOffice\PhpWord\ComplexType\FootnoteProperties::POSITION_SECTION_END);
+        //set the number format to use (decimal (default), upperRoman, upperLetter, ...)
+        $fp->setNumFmt(\PhpOffice\PhpWord\SimpleType\NumberFormat::LOWER_ROMAN);
+        //force starting at other than 1
+        $fp->setNumStart(2);
+        //when to restart counting (continuous (default), eachSect, eachPage)
+        $fp->setNumRestart(\PhpOffice\PhpWord\ComplexType\FootnoteProperties::RESTART_NUMBER_EACH_SECTION);
+        //And finaly, set it on the Section
+        $object->setEndnoteProperties($fp);
+
+        $this->assertInstanceOf("PhpOffice\\PhpWord\\ComplexType\\FootnoteProperties", $object->getEndnoteProperties());
     }
 }
