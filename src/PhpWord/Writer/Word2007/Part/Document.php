@@ -134,27 +134,20 @@ class Document extends AbstractPart
         foreach ($noteTypes as $noteType) {
             $isFootnote = $noteType === 'footnote';
 
-            $propertyCollections = array();
+            $finalProperties = array();
 
-            $propertyCollections[] = $isFootnote ? $section->getFootnoteProperties() : $section->getEndnoteProperties();
+            $localProperties = $isFootnote ? $section->getFootnoteProperties() : $section->getEndnoteProperties();
 
-            $phpWord = $section->getPhpWord();
-            $propertyCollections[] = $isFootnote ? $phpWord->getDefaultFootnoteProperties() : $phpWord->getDefaultEndnoteProperties();
-
-            $propertyCollections = array_filter($propertyCollections);
-
-            if (empty($propertyCollections)) {
-                continue;
+            if ($localProperties != null) {
+                $finalProperties += $localProperties->getAllSet();
             }
 
-            $propertyKeys = array(
-                'pos',
-                'numFmt',
-                'numStart',
-                'numRestart',
-            );
+            $phpWord = $section->getPhpWord();
+            $defaultProperties = $isFootnote ? $phpWord->getDefaultFootnoteProperties() : $phpWord->getDefaultEndnoteProperties();
 
-            $propertyValues = array_fill_keys($propertyKeys, null);
+            if ($defaultProperties != null) {
+                $finalProperties += $defaultProperties->getAllSet();
+            }
 
             $startElement = $isFootnote ? 'w:footnotePr' : 'w:endnotePr';
             $xmlWriter->startElement($startElement);
@@ -162,28 +155,14 @@ class Document extends AbstractPart
             // Write properties, local ones having precedence over default ones.
             // Default properties will also be written to settings.xml,
             // writing them in both places gives better results.
-            foreach ($propertyCollections as $propertyCollection) {
-                foreach ($propertyValues as $propertyKey => $propertyValue) {
-                    if ($propertyValue != null) {
-                        // Already set before, don't touch it
-                        continue;
-                    }
-
-                    $getMethod = 'get' . ucfirst($propertyKey);
-                    $value = $propertyCollection->$getMethod();
-
-                    if ($value == null) {
-                        continue;
-                    }
-
-                    $elementName = 'w:' . $propertyKey;
-
-                    $xmlWriter->startElement($elementName);
-                    $xmlWriter->writeAttribute('w:val', $value);
-                    $xmlWriter->endElement();
-
-                    $propertyValues[$propertyKey] = $value;
+            foreach ($finalProperties as $propertyKey => $propertyValue) {
+                if ($propertyValue == null) {
+                    continue;
                 }
+                $elementName = 'w:' . $propertyKey;
+                $xmlWriter->startElement($elementName);
+                $xmlWriter->writeAttribute('w:val', $propertyValue);
+                $xmlWriter->endElement();
             }
             $xmlWriter->endElement();
         }

@@ -178,4 +178,35 @@ final class FootnoteProperties
 
         return $this;
     }
+
+    /**
+     * Get all properties that have been set.
+     * 
+     * @return array
+     */
+    public function getAllSet()
+    {
+        $allProperties = array(
+            'pos',
+            'numFmt',
+            'numStart',
+            'numRestart',
+        );
+
+        $getPropertyValue = function ($propertyName)
+        {
+            $getMethod = 'get' . ucfirst($propertyName);
+            return $this->$getMethod();
+        };
+
+        $allPropertyValues = array_map(
+            $getPropertyValue,
+            array_combine(
+                array_flip($allProperties),
+                $allProperties
+            )
+        );
+
+        return array_filter($allPropertyValues);
+    }
 }
